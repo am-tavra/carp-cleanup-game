@@ -603,7 +603,7 @@ export default function Game() {
           <span style={{
             background: C.orange, color: C.deepTeal, padding: "2px 8px", borderRadius: 10,
             fontSize: 9, fontWeight: 700, letterSpacing: 1,
-          }}>ARCH</span>
+          }}>ARCHWAY</span>
         </div>
         <div style={{ fontSize: 12 }}>
           Rd <strong style={{ color: C.orange }}>{round}</strong>/{maxRounds}
