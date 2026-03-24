@@ -776,7 +776,10 @@ export default function Game() {
             <ellipse cy="70" rx="6" ry="2.5" fill={C.deepTeal} opacity="0.12">
               <animate attributeName="cx" from="250" to="-10" dur="10s" repeatCount="indefinite" />
             </ellipse>
-            <ArchDog x={110} y={10} scale={0.9} color={C.deepTeal} happy={true} wag={true} />
+            <g>
+              <animateTransform attributeName="transform" type="translate" values="0 0;0 -2;0 0;0 -1;0 0" dur="1.6s" repeatCount="indefinite" />
+              <ArchDog x={110} y={10} scale={0.9} color={C.deepTeal} happy={true} wag={true} walk={true} />
+            </g>
           </svg>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginBottom: 20 }}>
