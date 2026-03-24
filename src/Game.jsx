@@ -1,56 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  C, ZONES, METHODS, PRODUCTS, UPGRADES, FACTS, EVENTS, DIFFICULTY,
+  calcScore, getGrade, getNamedEnding, getComboBonus,
+} from "./constants.js";
+import {
+  playClick, playDeploy, playGood, playBad, playPup, playEvent, playUpgrade, playRoundEnd,
+} from "./sounds.js";
 
-// ===== ARCHWAY BRAND COLORS =====
-var C = {
-  deepTeal: "#003E49",
-  orange: "#F0B468",
-  yellow: "#FAD45A",
-  cream: "#FFF2E8",
-  milk: "#FFF7F4",
-  pink: "#E2B8B8",
-  lake: "#91C5EA",
-  sky: "#6580BF",
-  grass: "#D9E141",
-  leaf: "#9ABAAF",
-};
-
-var ZONES = [
-  { id: "upper", name: "Upper Illinois", carp: 85, health: 20 },
-  { id: "mid", name: "Mid Mississippi", carp: 70, health: 35 },
-  { id: "lower", name: "Lower Ohio", carp: 60, health: 40 },
-  { id: "wabash", name: "Wabash River", carp: 45, health: 55 },
-  { id: "lake", name: "Lake Michigan", carp: 30, health: 65 },
-];
-
-var METHODS = [
-  { id: "gill", name: "Gill Nets", icon: "🪤", cost: 200, power: 15, eco: -2 },
-  { id: "electro", name: "Electrofishing", icon: "⚡", cost: 350, power: 22, eco: -5 },
-  { id: "sound", name: "Sound Barrier", icon: "🔊", cost: 500, power: 10, eco: 3 },
-  { id: "bow", name: "Bow Fishing", icon: "🏹", cost: 150, power: 8, eco: 1 },
-];
-
-var PRODUCTS = [
-  { name: "Carp Kibble", icon: "🥣", lbs: 30, pups: 8 },
-  { name: "Minced Chips", icon: "🐟", lbs: 10, pups: 15 },
-  { name: "Carp Biscuits", icon: "🍪", lbs: 8, pups: 20 },
-  { name: "Rolled Skins", icon: "🦴", lbs: 5, pups: 25 },
-  { name: "Bladder Chews", icon: "🫧", lbs: 2, pups: 40 },
-];
-
-var FACTS = [
-  "Asian carp eat up to 40% of their body weight daily, starving native species.",
-  "A Silver Carp can leap 10 feet out of the water when startled by motors.",
-  "Asian carp were introduced in the 1970s to clean algae from aquaculture ponds.",
-  "The Great Lakes fishing industry worth $7B is threatened by Asian carp.",
-  "Carp protein is naturally hypoallergenic — perfect for sensitive dogs.",
-  "Asian carp make up over 60% of fish biomass in parts of the Illinois River.",
-  "Carp is rich in omega-3s, supporting healthy skin and coat in dogs.",
-  "Rolled carp skins use parts that would otherwise be waste — zero waste.",
-  "Air bladders are a novel protein most dogs have never been exposed to.",
-  "Hypoallergenic diets help 10%+ of dogs with food allergies find relief.",
-];
-
-// ===== ARCHWAY-STYLE SVG ILLUSTRATIONS =====
+// ===== SVG COMPONENTS =====
 
 function ArchDog({ x, y, scale, color, flip, happy, wag }) {
   var s = scale || 1;
@@ -58,29 +15,27 @@ function ArchDog({ x, y, scale, color, flip, happy, wag }) {
   var c = color || C.deepTeal;
   return (
     <g transform={"translate(" + x + "," + y + ") scale(" + (s * f) + "," + s + ")"}>
-      {/* Body */}
       <ellipse cx="0" cy="12" rx="12" ry="8" fill="none" stroke={c} strokeWidth="1.8" />
-      {/* Back legs */}
       <line x1="-6" y1="18" x2="-8" y2="26" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
       <line x1="-2" y1="18" x2="-3" y2="26" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
-      {/* Front legs */}
       <line x1="6" y1="18" x2="7" y2="26" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
       <line x1="10" y1="17" x2="12" y2="26" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
-      {/* Head */}
       <circle cx="14" cy="2" r="6" fill="none" stroke={c} strokeWidth="1.8" />
-      {/* Ear (floppy) */}
       <path d={"M10 -2 Q7 -6 9 -1"} stroke={c} strokeWidth="1.5" fill="none" strokeLinecap="round" />
-      {/* Eye */}
       <circle cx="16" cy="1" r="1.2" fill={c} />
       <circle cx="16.3" cy="0.7" r="0.35" fill="white" />
-      {/* Nose */}
       <ellipse cx="19" cy="3" rx="1.5" ry="1" fill={c} />
-      {/* Mouth / tongue */}
       {happy && <path d="M17 5 Q18 7 19 5" stroke={c} strokeWidth="0.8" fill="none" />}
       {happy && <ellipse cx="18" cy="7" rx="1" ry="1.5" fill={C.pink} stroke={c} strokeWidth="0.5" />}
-      {/* Tail */}
       <path d={"M-12 8 Q-18 2 -16 -2"} stroke={c} strokeWidth="1.8" fill="none" strokeLinecap="round">
-        {wag && <animate attributeName="d" values="M-12 8 Q-18 2 -16 -2;M-12 8 Q-19 4 -17 0;M-12 8 Q-18 2 -16 -2" dur="0.6s" repeatCount="indefinite" />}
+        {wag && (
+          <animate
+            attributeName="d"
+            values="M-12 8 Q-18 2 -16 -2;M-12 8 Q-19 4 -17 0;M-12 8 Q-18 2 -16 -2"
+            dur="0.6s"
+            repeatCount="indefinite"
+          />
+        )}
       </path>
     </g>
   );
@@ -115,17 +70,12 @@ function WaterBg() {
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, " + C.cream + " 0%, " + C.milk + " 50%, " + C.cream + " 100%)" }} />
       <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "30%" }} viewBox="0 0 400 150" preserveAspectRatio="none">
         <path d="M0 40 Q50 25 100 40 Q150 55 200 35 Q250 20 300 40 Q350 60 400 35 L400 150 L0 150Z" fill={C.lake} opacity="0.12">
-          <animate attributeName="d"
-            values="M0 40 Q50 25 100 40 Q150 55 200 35 Q250 20 300 40 Q350 60 400 35 L400 150 L0 150Z;M0 35 Q50 55 100 30 Q150 20 200 45 Q250 55 300 30 Q350 20 400 40 L400 150 L0 150Z;M0 40 Q50 25 100 40 Q150 55 200 35 Q250 20 300 40 Q350 60 400 35 L400 150 L0 150Z"
-            dur="6s" repeatCount="indefinite" />
+          <animate attributeName="d" values="M0 40 Q50 25 100 40 Q150 55 200 35 Q250 20 300 40 Q350 60 400 35 L400 150 L0 150Z;M0 35 Q50 55 100 30 Q150 20 200 45 Q250 55 300 30 Q350 20 400 40 L400 150 L0 150Z;M0 40 Q50 25 100 40 Q150 55 200 35 Q250 20 300 40 Q350 60 400 35 L400 150 L0 150Z" dur="6s" repeatCount="indefinite" />
         </path>
         <path d="M0 70 Q60 55 120 75 Q180 90 240 65 Q300 50 360 70 Q380 80 400 65 L400 150 L0 150Z" fill={C.lake} opacity="0.08">
-          <animate attributeName="d"
-            values="M0 70 Q60 55 120 75 Q180 90 240 65 Q300 50 360 70 Q380 80 400 65 L400 150 L0 150Z;M0 65 Q60 85 120 60 Q180 45 240 75 Q300 85 360 60 Q380 55 400 70 L400 150 L0 150Z;M0 70 Q60 55 120 75 Q180 90 240 65 Q300 50 360 70 Q380 80 400 65 L400 150 L0 150Z"
-            dur="8s" repeatCount="indefinite" />
+          <animate attributeName="d" values="M0 70 Q60 55 120 75 Q180 90 240 65 Q300 50 360 70 Q380 80 400 65 L400 150 L0 150Z;M0 65 Q60 85 120 60 Q180 45 240 75 Q300 85 360 60 Q380 55 400 70 L400 150 L0 150Z;M0 70 Q60 55 120 75 Q180 90 240 65 Q300 50 360 70 Q380 80 400 65 L400 150 L0 150Z" dur="8s" repeatCount="indefinite" />
         </path>
       </svg>
-      {/* Floating carp silhouettes */}
       <svg style={{ position: "absolute", top: "55%", left: 0, width: "100%", height: "30%" }} viewBox="0 0 400 200">
         <ellipse cy="60" rx="14" ry="5" fill={C.leaf} opacity="0.1">
           <animate attributeName="cx" from="-20" to="420" dur="14s" repeatCount="indefinite" />
@@ -145,18 +95,14 @@ function ZoneArt({ health, carp }) {
   var treeCount = Math.max(0, Math.floor(health / 25));
   var fishCount = Math.min(4, Math.floor(carp / 20));
   var nativeCount = Math.max(0, Math.floor(health / 35));
-
   return (
     <svg viewBox="0 0 200 45" style={{ width: "100%", height: 45, borderRadius: "8px 8px 0 0", display: "block" }}>
       <rect width="200" height="45" fill={C.milk} />
-      {/* Land */}
-      <rect y="0" width="200" height="18" fill={landColor} opacity="0.3" rx="0" />
-      {/* Grass tufts */}
-      {Array.from({ length: 6 }).map(function(_, i) {
+      <rect y="0" width="200" height="18" fill={landColor} opacity="0.3" />
+      {Array.from({ length: 6 }).map(function (_, i) {
         return <path key={"g" + i} d={"M" + (10 + i * 32) + " 16 Q" + (12 + i * 32) + " 10 " + (14 + i * 32) + " 16"} stroke={C.grass} strokeWidth="1" fill="none" opacity="0.5" />;
       })}
-      {/* Trees */}
-      {Array.from({ length: treeCount }).map(function(_, i) {
+      {Array.from({ length: treeCount }).map(function (_, i) {
         var tx = 25 + i * 45;
         return (
           <g key={"t" + i}>
@@ -165,13 +111,10 @@ function ZoneArt({ health, carp }) {
           </g>
         );
       })}
-      {/* Flowers */}
       {health > 40 && <FlowerCluster x={150} y={11} color={C.sky} />}
       {health > 65 && <FlowerCluster x={60} y={12} color={C.pink} />}
-      {/* Birds */}
       {health > 55 && <Bird x={30} y={3} />}
       {health > 75 && <Bird x={130} y={2} />}
-      {/* Water */}
       <rect y="18" width="200" height="27" fill={waterColor} opacity={waterOp} />
       <ellipse cx="50" cy="30" rx="18" ry="1.2" fill="white" opacity="0.15">
         <animate attributeName="rx" values="18;24;18" dur="3s" repeatCount="indefinite" />
@@ -179,8 +122,7 @@ function ZoneArt({ health, carp }) {
       <ellipse cx="140" cy="35" rx="14" ry="1" fill="white" opacity="0.1">
         <animate attributeName="rx" values="14;20;14" dur="4s" repeatCount="indefinite" />
       </ellipse>
-      {/* Carp (darker, invasive) */}
-      {Array.from({ length: fishCount }).map(function(_, i) {
+      {Array.from({ length: fishCount }).map(function (_, i) {
         var fy = 24 + (i % 3) * 6;
         var dur = 4 + i * 1.3;
         return (
@@ -189,8 +131,7 @@ function ZoneArt({ health, carp }) {
           </ellipse>
         );
       })}
-      {/* Native fish (blue) */}
-      {Array.from({ length: nativeCount }).map(function(_, i) {
+      {Array.from({ length: nativeCount }).map(function (_, i) {
         var fy = 26 + i * 5;
         return (
           <ellipse key={"n" + i} cy={fy} rx="3" ry="1.5" fill={C.lake} opacity="0.4">
@@ -207,9 +148,8 @@ function PupPack({ count }) {
   var happy = count > 400;
   return (
     <svg viewBox="0 0 220 35" style={{ width: "100%", maxWidth: 300, height: 35, display: "block", margin: "0 auto" }}>
-      {Array.from({ length: n }).map(function(_, i) {
-        var xPos = 15 + i * 20;
-        return <ArchDog key={i} x={xPos} y={5} scale={0.55} color={C.deepTeal} flip={i % 3 === 0} happy={happy} wag={true} />;
+      {Array.from({ length: n }).map(function (_, i) {
+        return <ArchDog key={i} x={15 + i * 20} y={5} scale={0.55} color={C.deepTeal} flip={i % 3 === 0} happy={happy} wag={true} />;
       })}
     </svg>
   );
@@ -223,87 +163,372 @@ function Bar({ value, color }) {
   );
 }
 
+function Sparkline({ data, color }) {
+  if (!data || data.length < 2) return null;
+  var w = 52;
+  var h = 16;
+  var pts = data.map(function (v, i) {
+    return (i / (data.length - 1)) * w + "," + (h - (v / 100) * h);
+  }).join(" ");
+  return (
+    <svg width={w} height={h} style={{ display: "block" }}>
+      <polyline points={pts} stroke={color} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 // ===== MAIN GAME =====
 
 export default function Game() {
   const [phase, setPhase] = useState("title");
+  const [difficulty, setDifficulty] = useState("normal");
   const [round, setRound] = useState(1);
   const [money, setMoney] = useState(1000);
-  const [zones, setZones] = useState(ZONES.map(function(z) { return Object.assign({}, z); }));
+  const [zones, setZones] = useState(ZONES.map(function (z) { return Object.assign({}, z); }));
   const [picked, setPicked] = useState(null);
   const [assigned, setAssigned] = useState({});
   const [harvested, setHarvested] = useState(0);
   const [pupsFed, setPupsFed] = useState(0);
   const [log, setLog] = useState([]);
   const [factIdx, setFactIdx] = useState(0);
-  const [hasPlant, setHasPlant] = useState(false);
-  const [hasLab, setHasLab] = useState(false);
-  const [hasVet, setHasVet] = useState(false);
-  const [hasCold, setHasCold] = useState(false);
-  const [hasZero, setHasZero] = useState(false);
+  const [upgrades, setUpgrades] = useState({ plant: 0, lab: 0, vet: 0, cold: 0, zero: 0 });
   const [copied, setCopied] = useState(false);
+  const [currentEvent, setCurrentEvent] = useState(null);
+  const [pendingResults, setPendingResults] = useState(null);
+  const [executingStep, setExecutingStep] = useState(0);
+  const [zoneHistory, setZoneHistory] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [playerName, setPlayerName] = useState("");
+  const [scoreSubmitted, setScoreSubmitted] = useState(false);
+  const [productUnlock, setProductUnlock] = useState(null);
   var maxRounds = 12;
 
-  function pickZone(id) { setPicked(id === picked ? null : id); }
+  // ===== ANIMATION EFFECT =====
+  useEffect(function () {
+    if (phase !== "executing" || !pendingResults) return;
+    if (executingStep >= ZONES.length) {
+      // All zones animated — apply results and advance
+      setZones(pendingResults.newZones);
+      setHarvested(function (h) { return h + pendingResults.roundLbs; });
+      setPupsFed(function (p) { return p + pendingResults.pups; });
+      setMoney(function (m) { return m + pendingResults.income; });
+      setLog(pendingResults.newLog);
+      setZoneHistory(function (h) {
+        return [...h, pendingResults.newZones.map(function (z) { return { carp: z.carp, health: z.health }; })];
+      });
+      setAssigned({});
+      setPicked(null);
+      setFactIdx(function (f) { return (f + 1) % FACTS.length; });
+      playRoundEnd();
+      if (round >= maxRounds) {
+        setPhase("gameover");
+      } else {
+        setPhase("results");
+      }
+      setPendingResults(null);
+      setExecutingStep(0);
+      return;
+    }
+    var entry = pendingResults.newLog[executingStep];
+    if (entry) { entry.good ? playGood() : playBad(); }
+    var timer = setTimeout(function () {
+      setExecutingStep(function (s) { return s + 1; });
+    }, 550);
+    return function () { clearTimeout(timer); };
+  }, [phase, executingStep, pendingResults]);
+
+  // ===== FETCH LEADERBOARD ON GAME OVER =====
+  useEffect(function () {
+    if (phase !== "gameover") return;
+    fetch("/api/scores")
+      .then(function (r) { return r.json(); })
+      .then(function (data) { setLeaderboard(data || []); })
+      .catch(function () {});
+  }, [phase]);
+
+  // ===== GAME LOGIC =====
+
+  function startGame() {
+    var diff = DIFFICULTY[difficulty];
+    setMoney(diff.startMoney);
+    var event = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+    setCurrentEvent(event);
+    playEvent();
+    setPhase("plan");
+  }
+
+  function pickZone(id) {
+    playClick();
+    setPicked(id === picked ? null : id);
+  }
+
   function assignMethod(mid) {
     if (!picked) return;
-    var m = METHODS.find(function(x) { return x.id === mid; });
-    var refund = assigned[picked] ? METHODS.find(function(x) { return x.id === assigned[picked]; }).cost : 0;
+    var m = METHODS.find(function (x) { return x.id === mid; });
+    var refund = assigned[picked]
+      ? METHODS.find(function (x) { return x.id === assigned[picked]; }).cost
+      : 0;
     if (money + refund < m.cost) return;
-    setMoney(function(p) { return p + refund - m.cost; });
-    setAssigned(function(p) { var n = Object.assign({}, p); n[picked] = mid; return n; });
+    playDeploy();
+    setMoney(function (p) { return p + refund - m.cost; });
+    setAssigned(function (p) { var n = Object.assign({}, p); n[picked] = mid; return n; });
   }
+
   function removeAssignment(zid) {
-    var mid = assigned[zid]; if (!mid) return;
-    var m = METHODS.find(function(x) { return x.id === mid; });
-    setMoney(function(p) { return p + m.cost; });
-    setAssigned(function(p) { var n = Object.assign({}, p); delete n[zid]; return n; });
+    var mid = assigned[zid];
+    if (!mid) return;
+    playClick();
+    var m = METHODS.find(function (x) { return x.id === mid; });
+    setMoney(function (p) { return p + m.cost; });
+    setAssigned(function (p) { var n = Object.assign({}, p); delete n[zid]; return n; });
   }
-  function buyUpgrade(cost, setter) {
-    if (money < cost) return;
-    setMoney(function(p) { return p - cost; }); setter(true);
+
+  function buyUpgrade(upgradeId) {
+    var upg = UPGRADES.find(function (u) { return u.id === upgradeId; });
+    var currentLevel = upgrades[upgradeId];
+    if (currentLevel >= 2) return;
+    var tier = upg.tiers[currentLevel];
+    if (money < tier.cost) return;
+    playUpgrade();
+    setMoney(function (p) { return p - tier.cost; });
+    setUpgrades(function (prev) {
+      var next = Object.assign({}, prev);
+      next[upgradeId] = currentLevel + 1;
+      return next;
+    });
+    // Show product unlock modal for zero waste tier 1
+    if (upgradeId === "zero" && currentLevel === 0 && upg.product) {
+      setProductUnlock(upg.product);
+    }
   }
+
   function runRound() {
-    var newLog = []; var roundLbs = 0; var effMult = hasLab ? 1.3 : 1;
-    var newZones = zones.map(function(z) {
-      var mid = assigned[z.id]; var nz = Object.assign({}, z);
+    var diff = DIFFICULTY[difficulty];
+    var event = currentEvent || {};
+    var effMult = (upgrades.lab === 2 ? 1.6 : upgrades.lab === 1 ? 1.3 : 1) *
+      (event.removalMult || 1) *
+      diff.removalMult;
+
+    var newLog = [];
+    var roundLbs = 0;
+
+    var newZones = zones.map(function (z, zIdx) {
+      var nz = Object.assign({}, z);
+      var mid = assigned[z.id];
+
       if (mid) {
-        var m = METHODS.find(function(x) { return x.id === mid; });
-        var rem = Math.min(nz.carp, Math.round(m.power * effMult * (0.8 + Math.random() * 0.4)));
+        var m = METHODS.find(function (x) { return x.id === mid; });
+        var comboBonus = getComboBonus(z.id, assigned);
+        var comboBonusMult = comboBonus ? (1 + comboBonus.bonus) : 1;
+        var rem = Math.min(
+          nz.carp,
+          Math.round(m.power * effMult * comboBonusMult * (0.8 + Math.random() * 0.4))
+        );
         nz.carp = Math.max(0, nz.carp - rem);
-        nz.health = Math.min(100, nz.health + Math.max(0, rem / 2 + m.eco));
+        var healthGain = Math.round((Math.max(0, rem / 2 + m.eco)) * (event.healthMult || 1));
+        if (event.healthBonus && nz.health > 50) healthGain += event.healthBonus;
+        nz.health = Math.min(100, nz.health + healthGain);
         roundLbs += rem * 50;
-        newLog.push({ text: z.name + ": -" + rem + "% carp (" + m.name + ")", good: true });
+        var comboNote = comboBonus ? " +" + Math.round(comboBonus.bonus * 100) + "% combo" : "";
+        newLog.push({ text: z.name + ": -" + rem + "% carp (" + m.name + comboNote + ")", good: true });
       } else {
-        var sp = Math.round(3 + Math.random() * 5);
-        nz.carp = Math.min(100, nz.carp + sp); nz.health = Math.max(0, nz.health - sp / 2);
+        var base = 3 + Math.random() * 5;
+        var sp = Math.round(base * diff.spreadMult + (event.spreadBonus || 0) + (event.unmangedSpreadBonus || 0));
+        // Minimum carp spread — unmanaged zones never go below 5%
+        nz.carp = Math.min(100, Math.max(5, nz.carp + sp));
+        nz.health = Math.max(0, nz.health - sp / 2);
         newLog.push({ text: z.name + ": +" + sp + "% carp (unmanaged)", good: false });
       }
       return nz;
     });
-    var yieldMult = (hasPlant ? 1.4 : 1) * (hasCold ? 1.6 : 1);
+
+    var yieldMult = (upgrades.plant === 2 ? 1.8 : upgrades.plant === 1 ? 1.4 : 1) *
+      (upgrades.cold === 2 ? 2.2 : upgrades.cold === 1 ? 1.6 : 1);
     var usable = Math.round(roundLbs * 0.65 * yieldMult);
-    var pups = 0; var prodCount = hasZero ? 5 : 3;
+    var prodCount = upgrades.zero > 0 ? 5 : 3;
+    var rareMult = upgrades.zero >= 2 ? 2 : 1;
     var shares = [0.4, 0.25, 0.25, 0.05, 0.05];
-    for (var i = 0; i < prodCount; i++) { pups += Math.floor(Math.round(usable * shares[i]) / PRODUCTS[i].lbs) * PRODUCTS[i].pups; }
-    var income = 400 + (hasVet ? 150 : 0) + Math.round(usable * 0.8);
-    setZones(newZones); setHarvested(function(p) { return p + roundLbs; }); setPupsFed(function(p) { return p + pups; });
-    setMoney(function(p) { return p + income; }); setLog(newLog); setAssigned({}); setPicked(null);
-    setFactIdx(function(p) { return (p + 1) % FACTS.length; });
-    if (round >= maxRounds) { setPhase("gameover"); } else { setPhase("results"); }
+    var pups = 0;
+    for (var i = 0; i < prodCount; i++) {
+      var share = Math.round(usable * shares[i]) * (i >= 3 ? rareMult : 1);
+      pups += Math.floor(share / PRODUCTS[i].lbs) * PRODUCTS[i].pups;
+    }
+
+    var vetIncome = upgrades.vet === 2 ? 350 : upgrades.vet === 1 ? 150 : 0;
+    var income = Math.round((400 + vetIncome + Math.round(usable * 0.8)) * diff.incomeMult);
+    income += event.bonusMoney || 0;
+
+    setPendingResults({ newZones, roundLbs, pups, income, newLog });
+    setExecutingStep(0);
+    setPhase("executing");
   }
-  function nextRound() { setRound(function(p) { return p + 1; }); setPhase("plan"); }
+
+  function nextRound() {
+    var event = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+    setCurrentEvent(event);
+    playEvent();
+    setRound(function (r) { return r + 1; });
+    setPhase("plan");
+  }
+
   function resetAll() {
-    setPhase("title"); setRound(1); setMoney(1000);
-    setZones(ZONES.map(function(z) { return Object.assign({}, z); }));
-    setPicked(null); setAssigned({}); setHarvested(0); setPupsFed(0); setLog([]);
-    setHasPlant(false); setHasLab(false); setHasVet(false); setHasCold(false); setHasZero(false);
+    setPhase("title");
+    setRound(1);
+    setMoney(DIFFICULTY[difficulty].startMoney);
+    setZones(ZONES.map(function (z) { return Object.assign({}, z); }));
+    setPicked(null);
+    setAssigned({});
+    setHarvested(0);
+    setPupsFed(0);
+    setLog([]);
+    setUpgrades({ plant: 0, lab: 0, vet: 0, cold: 0, zero: 0 });
+    setCopied(false);
+    setCurrentEvent(null);
+    setPendingResults(null);
+    setExecutingStep(0);
+    setZoneHistory([]);
+    setScoreSubmitted(false);
+    setPlayerName("");
+    setProductUnlock(null);
   }
 
-  var avgHealth = Math.round(zones.reduce(function(s, z) { return s + z.health; }, 0) / zones.length);
-  var avgCarp = Math.round(zones.reduce(function(s, z) { return s + z.carp; }, 0) / zones.length);
-  var deployCount = Object.keys(assigned).length;
+  function submitScore(name, score) {
+    fetch("/api/scores", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name, score: score }),
+    })
+      .then(function () {
+        setScoreSubmitted(true);
+        return fetch("/api/scores");
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) { setLeaderboard(data || []); })
+      .catch(function () { setScoreSubmitted(true); });
+  }
 
+  function shareScore(shareText) {
+    // Build a simple canvas score card
+    try {
+      var canvas = document.createElement("canvas");
+      canvas.width = 600;
+      canvas.height = 320;
+      var ctx = canvas.getContext("2d");
+
+      // Background
+      ctx.fillStyle = "#FFF2E8";
+      ctx.fillRect(0, 0, 600, 320);
+
+      // Teal header bar
+      ctx.fillStyle = "#003E49";
+      ctx.fillRect(0, 0, 600, 60);
+
+      ctx.fillStyle = "#FFF2E8";
+      ctx.font = "bold 22px sans-serif";
+      ctx.fillText("Carp Cleanup", 24, 38);
+      ctx.font = "12px sans-serif";
+      ctx.fillStyle = "#F0B468";
+      ctx.fillText("by Archway Pet Food", 24, 54);
+
+      // Grade
+      var sc = calcScore(avgHealth, avgCarp, pupsFed, harvested);
+      var g = getGrade(sc);
+      ctx.font = "bold 72px sans-serif";
+      ctx.fillStyle = g.c;
+      ctx.fillText(g.l, 480, 160);
+
+      ctx.font = "bold 28px sans-serif";
+      ctx.fillStyle = "#F0B468";
+      ctx.fillText(sc.toLocaleString() + " pts", 24, 120);
+
+      ctx.font = "bold 18px sans-serif";
+      ctx.fillStyle = "#003E49";
+      ctx.fillText(g.t, 24, 148);
+
+      var end = getNamedEnding(zones);
+      ctx.font = "14px sans-serif";
+      ctx.fillStyle = "#003E49";
+      ctx.globalAlpha = 0.7;
+      ctx.fillText(end.title, 24, 172);
+      ctx.globalAlpha = 1;
+
+      // Stats
+      var stats = [
+        ["Carp Removed", harvested.toLocaleString() + " lbs"],
+        ["Pups Fed", pupsFed.toLocaleString()],
+        ["Eco Recovery", avgHealth + "%"],
+        ["Carp Left", avgCarp + "%"],
+      ];
+      ctx.font = "13px sans-serif";
+      stats.forEach(function (s, i) {
+        var col = i < 2 ? 24 : 310;
+        var row = i < 2 ? i : i - 2;
+        ctx.fillStyle = "#003E49";
+        ctx.globalAlpha = 0.45;
+        ctx.fillText(s[0].toUpperCase(), col, 216 + row * 34);
+        ctx.globalAlpha = 1;
+        ctx.font = "bold 17px sans-serif";
+        ctx.fillText(s[1], col, 234 + row * 34);
+        ctx.font = "13px sans-serif";
+      });
+
+      // Footer
+      ctx.fillStyle = "#003E49";
+      ctx.globalAlpha = 0.25;
+      ctx.font = "11px sans-serif";
+      ctx.fillText("ARCHWAY PET FOOD  •  HYPOALLERGENIC  •  UNSHAKABLY SUSTAINABLE", 24, 308);
+      ctx.globalAlpha = 1;
+
+      var dataUrl = canvas.toDataURL("image/png");
+
+      if (navigator.share && navigator.canShare) {
+        canvas.toBlob(function (blob) {
+          var file = new File([blob], "carp-cleanup-score.png", { type: "image/png" });
+          if (navigator.canShare({ files: [file] })) {
+            navigator.share({ files: [file], title: "Carp Cleanup", text: shareText });
+          } else {
+            downloadImage(dataUrl);
+          }
+        });
+      } else {
+        downloadImage(dataUrl);
+      }
+    } catch (e) {
+      // Canvas failed — fall back to clipboard
+      copyText(shareText);
+    }
+  }
+
+  function downloadImage(dataUrl) {
+    var a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = "carp-cleanup-score.png";
+    a.click();
+  }
+
+  function copyText(text) {
+    function onCopied() { setCopied(true); setTimeout(function () { setCopied(false); }, 2000); }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(onCopied);
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      onCopied();
+    }
+  }
+
+  // ===== COMPUTED VALUES =====
+  var avgHealth = Math.round(zones.reduce(function (s, z) { return s + z.health; }, 0) / zones.length);
+  var avgCarp = Math.round(zones.reduce(function (s, z) { return s + z.carp; }, 0) / zones.length);
+  var deployCount = Object.keys(assigned).length;
+  var projectedScore = calcScore(avgHealth, avgCarp, pupsFed, harvested);
+  var projectedGrade = getGrade(projectedScore);
+
+  // ===== SHARED STYLES =====
   var btn = { border: "none", cursor: "pointer", fontFamily: "inherit" };
   var btnPrimary = Object.assign({}, btn, {
     background: C.deepTeal, color: C.cream, padding: "14px 32px",
@@ -317,15 +542,67 @@ export default function Game() {
     background: "white", borderRadius: 14, border: "1px solid rgba(0,62,73,0.08)",
     boxShadow: "0 2px 12px rgba(0,62,73,0.06)",
   };
-
-  var css = (
-    <style>{"\n      @keyframes pupWag { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }\n      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }\n      * { box-sizing: border-box; }\n    "}</style>
-  );
-
   var headFont = "'DM Serif Display', Georgia, serif";
   var bodyFont = "'DM Sans', system-ui, sans-serif";
 
-  // ===== TITLE =====
+  var css = (
+    <style>{`
+      @keyframes pupWag { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+      * { box-sizing: border-box; }
+    `}</style>
+  );
+
+  // ===== PRODUCT UNLOCK MODAL =====
+  function ProductUnlockModal({ product, onClose }) {
+    return (
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 100,
+        background: "rgba(0,62,73,0.5)", display: "flex",
+        alignItems: "center", justifyContent: "center", padding: 24,
+      }} onClick={onClose}>
+        <div style={Object.assign({}, cardStyle, {
+          padding: 24, maxWidth: 340, width: "100%", textAlign: "center",
+          animation: "fadeIn 0.3s ease",
+        })} onClick={function (e) { e.stopPropagation(); }}>
+          <div style={{ fontSize: 36, marginBottom: 8 }}>{product.icons.join(" ")}</div>
+          <div style={{
+            background: C.grass + "33", border: "1px solid " + C.grass + "55",
+            color: C.deepTeal, padding: "3px 12px", borderRadius: 20,
+            fontSize: 9, fontWeight: 700, letterSpacing: 2, display: "inline-block", marginBottom: 12,
+          }}>PRODUCT UNLOCKED</div>
+          <div style={{ fontFamily: headFont, fontSize: 20, color: C.deepTeal, marginBottom: 8 }}>{product.name}</div>
+          <p style={{ fontSize: 13, lineHeight: 1.7, opacity: 0.65, color: C.deepTeal, marginBottom: 20 }}>{product.blurb}</p>
+          <button onClick={onClose} style={btnPrimary}>Got it!</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== EVENT BANNER =====
+  function EventBanner({ event }) {
+    if (!event) return null;
+    return (
+      <div style={{
+        background: event.bad ? C.pink + "55" : C.grass + "44",
+        border: "1px solid " + (event.bad ? C.pink : C.grass),
+        borderRadius: 10, padding: "8px 12px", marginBottom: 12,
+        animation: "slideIn 0.3s ease",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 18 }}>{event.icon}</span>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.deepTeal }}>{event.name}</div>
+            <div style={{ fontSize: 11, opacity: 0.65, color: C.deepTeal }}>{event.desc}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== TITLE SCREEN =====
   if (phase === "title") {
     return (
       <div style={{
@@ -342,83 +619,87 @@ export default function Game() {
             display: "inline-block", marginBottom: 20,
           }}>Archway Pet Food Presents</div>
 
-          <div style={{
-            fontFamily: headFont, fontSize: 56, lineHeight: 1, color: C.deepTeal, marginBottom: 4,
-          }}>Carp Cleanup</div>
+          <div style={{ fontFamily: headFont, fontSize: 56, lineHeight: 1, color: C.deepTeal, marginBottom: 4 }}>
+            Carp Cleanup
+          </div>
 
           <p style={{ fontSize: 16, color: C.deepTeal, opacity: 0.6, fontStyle: "italic", margin: "8px 0 20px" }}>
             Save Our Waterways. Feed Our Pups.
           </p>
 
-          {/* Hero illustration */}
           <svg viewBox="0 0 240 90" style={{ width: "100%", maxWidth: 340, height: "auto", margin: "0 auto 20px", display: "block" }}>
-            {/* Sky */}
             <rect width="240" height="90" rx="12" fill={C.milk} />
-            {/* Land */}
             <rect y="0" width="240" height="40" rx="12" fill={C.leaf} opacity="0.25" />
-            {/* Grass */}
-            {[20, 50, 90, 140, 180, 210].map(function(gx, i) {
+            {[20, 50, 90, 140, 180, 210].map(function (gx, i) {
               return <path key={i} d={"M" + gx + " 38 Q" + (gx + 3) + " 30 " + (gx + 6) + " 38"} stroke={C.grass} strokeWidth="1.2" fill="none" opacity="0.6" />;
             })}
-            {/* Trees */}
             <line x1="30" y1="20" x2="30" y2="38" stroke={C.deepTeal} strokeWidth="1.5" opacity="0.3" />
             <circle cx="30" cy="16" r="8" fill={C.leaf} opacity="0.5" />
             <line x1="190" y1="16" x2="190" y2="38" stroke={C.deepTeal} strokeWidth="1.5" opacity="0.3" />
             <circle cx="190" cy="12" r="10" fill={C.leaf} opacity="0.5" />
-            {/* Flowers */}
             <FlowerCluster x={70} y={30} color={C.sky} />
             <FlowerCluster x={155} y={32} color={C.pink} />
-            {/* Birds */}
             <Bird x={50} y={8} />
             <Bird x={160} y={5} />
-            {/* Water */}
-            <rect y="40" width="240" height="50" fill={C.lake} opacity="0.2" rx="0" />
+            <rect y="40" width="240" height="50" fill={C.lake} opacity="0.2" />
             <ellipse cx="60" cy="58" rx="25" ry="2" fill="white" opacity="0.2">
               <animate attributeName="rx" values="25;35;25" dur="3s" repeatCount="indefinite" />
             </ellipse>
             <ellipse cx="170" cy="65" rx="20" ry="1.5" fill="white" opacity="0.15">
               <animate attributeName="rx" values="20;28;20" dur="4s" repeatCount="indefinite" />
             </ellipse>
-            {/* Carp swimming */}
             <ellipse cy="55" rx="8" ry="3" fill={C.deepTeal} opacity="0.15">
               <animate attributeName="cx" from="-10" to="250" dur="8s" repeatCount="indefinite" />
             </ellipse>
             <ellipse cy="70" rx="6" ry="2.5" fill={C.deepTeal} opacity="0.12">
               <animate attributeName="cx" from="250" to="-10" dur="10s" repeatCount="indefinite" />
             </ellipse>
-            {/* Dog on bank */}
             <ArchDog x={110} y={10} scale={0.9} color={C.deepTeal} happy={true} wag={true} />
           </svg>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginBottom: 20 }}>
-            {["Hypoallergenic", "Sustainable", "Invasive → Nutritious"].map(function(t) {
-              return <span key={t} style={{
-                background: C.yellow + "44", border: "1px solid " + C.orange + "66",
-                padding: "4px 12px", borderRadius: 16, fontSize: 11, color: C.deepTeal, fontWeight: 600,
-              }}>{t}</span>;
-            })}
-          </div>
-
-          <p style={{ fontSize: 14, opacity: 0.55, lineHeight: 1.7, marginBottom: 28, color: C.deepTeal }}>
-            Howdy! Asian carp are destroying America's rivers. Deploy removal teams across 5 zones,
-            restore ecosystems, and turn every catch into hypoallergenic nutrition for pups everywhere.
-          </p>
-
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginBottom: 28 }}>
-            {PRODUCTS.map(function(p) {
+            {["Hypoallergenic", "Sustainable", "Invasive → Nutritious"].map(function (t) {
               return (
-                <div key={p.name} style={{
-                  background: "white", borderRadius: 10, padding: "8px 10px", textAlign: "center",
-                  border: "1px solid rgba(0,62,73,0.08)", boxShadow: "0 1px 4px rgba(0,62,73,0.05)",
-                }}>
-                  <div style={{ fontSize: 18 }}>{p.icon}</div>
-                  <div style={{ fontSize: 8, marginTop: 2, color: C.deepTeal, opacity: 0.6, fontWeight: 600 }}>{p.name}</div>
-                </div>
+                <span key={t} style={{
+                  background: C.yellow + "44", border: "1px solid " + C.orange + "66",
+                  padding: "4px 12px", borderRadius: 16, fontSize: 11, color: C.deepTeal, fontWeight: 600,
+                }}>{t}</span>
               );
             })}
           </div>
 
-          <button onClick={function() { setPhase("plan"); }} style={btnPrimary}>
+          <p style={{ fontSize: 14, opacity: 0.55, lineHeight: 1.7, marginBottom: 24, color: C.deepTeal }}>
+            Asian carp are destroying America's rivers. Deploy removal teams across 5 zones,
+            restore ecosystems, and turn every catch into hypoallergenic nutrition for pups everywhere.
+          </p>
+
+          {/* Difficulty selector */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 10, letterSpacing: 2, opacity: 0.4, marginBottom: 10, fontWeight: 700 }}>SELECT DIFFICULTY</div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+              {Object.entries(DIFFICULTY).map(function ([key, diff]) {
+                var active = difficulty === key;
+                return (
+                  <button key={key} onClick={function () { playClick(); setDifficulty(key); }} style={{
+                    ...btn,
+                    background: active ? C.deepTeal : "white",
+                    color: active ? C.cream : C.deepTeal,
+                    border: active ? "2px solid " + C.deepTeal : "2px solid rgba(0,62,73,0.15)",
+                    borderRadius: 12, padding: "10px 16px", textAlign: "center",
+                    flex: 1,
+                  }}>
+                    <div style={{ fontSize: 18 }}>{diff.emoji}</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>{diff.label}</div>
+                    <div style={{ fontSize: 9, opacity: active ? 0.7 : 0.4, marginTop: 1 }}>
+                      ${diff.startMoney}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <button onClick={startGame} style={btnPrimary}>
             Start Mission
           </button>
 
@@ -430,99 +711,73 @@ export default function Game() {
     );
   }
 
-  // ===== GAME OVER =====
-  if (phase === "gameover") {
-    var sc = Math.round(avgHealth * 10 + (100 - avgCarp) * 5 + pupsFed / 5 + harvested / 100);
-    var grades = [
-      { min: 1800, l: "S", t: "River Guardian", c: C.grass },
-      { min: 1400, l: "A", t: "Ecosystem Hero", c: C.leaf },
-      { min: 1000, l: "B", t: "Carp Commander", c: C.lake },
-      { min: 600, l: "C", t: "River Rookie", c: C.sky },
-      { min: 0, l: "D", t: "Needs More Nets", c: C.pink },
-    ];
-    var g = grades.find(function(x) { return sc >= x.min; });
-    var shareText = "🐟 I scored " + sc + " pts in Carp Cleanup by @ArchwayPetFood!\n🎣 " + harvested.toLocaleString() + " lbs removed\n🐕 " + pupsFed.toLocaleString() + " pups fed healthier\n🌿 " + avgHealth + "% recovery\nPlay now! 🐾";
-
+  // ===== EXECUTING SCREEN (animated round) =====
+  if (phase === "executing") {
+    var visibleLog = pendingResults ? pendingResults.newLog.slice(0, executingStep) : [];
     return (
       <div style={{
-        minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center",
-        justifyContent: "center", fontFamily: bodyFont, color: C.deepTeal,
-        padding: 24, textAlign: "center", position: "relative",
+        minHeight: "100vh", fontFamily: bodyFont, color: C.deepTeal,
+        padding: 16, position: "relative", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
       }}>
         {css}
         <WaterBg />
-        <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 400 }}>
-          <div style={{ fontSize: 10, letterSpacing: 4, opacity: 0.4, marginBottom: 16 }}>MISSION COMPLETE</div>
-
-          <div style={{
-            width: 90, height: 90, borderRadius: "50%", display: "flex", alignItems: "center",
-            justifyContent: "center", border: "3px solid " + g.c, fontSize: 44, fontWeight: 900,
-            boxShadow: "0 0 24px " + g.c + "33", margin: "0 auto 8px", background: "white",
-          }}>{g.l}</div>
-          <div style={{ fontFamily: headFont, fontSize: 20, color: C.deepTeal }}>{g.t}</div>
-          <div style={{ fontFamily: headFont, fontSize: 36, color: C.orange, margin: "4px 0 16px" }}>{sc.toLocaleString()} pts</div>
-
-          <div style={Object.assign({}, cardStyle, { padding: "8px 12px", marginBottom: 16 })}>
-            <PupPack count={pupsFed} />
-            <div style={{ fontSize: 12, opacity: 0.5, paddingBottom: 6, color: C.deepTeal }}>{pupsFed.toLocaleString()} pups eating healthier!</div>
+        <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 440 }}>
+          <div style={{ textAlign: "center", marginBottom: 20 }}>
+            <div style={{ fontSize: 10, letterSpacing: 2, opacity: 0.4, marginBottom: 6 }}>ROUND {round} IN PROGRESS</div>
+            <div style={{ fontFamily: headFont, fontSize: 24, color: C.deepTeal }}>Deploying Teams…</div>
+            {currentEvent && (
+              <div style={{ marginTop: 12 }}>
+                <EventBanner event={currentEvent} />
+              </div>
+            )}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
-            {[
-              { icon: "🎣", val: harvested.toLocaleString() + " lbs", lab: "Carp Removed" },
-              { icon: "🐕", val: pupsFed.toLocaleString(), lab: "Pups Fed" },
-              { icon: "🌿", val: avgHealth + "%", lab: "Eco Recovery" },
-              { icon: "📉", val: avgCarp + "%", lab: "Carp Left" },
-            ].map(function(s) {
+          <div style={Object.assign({}, cardStyle, { padding: 14 })}>
+            {ZONES.map(function (z, i) {
+              var entry = visibleLog[i];
+              var isPending = i >= executingStep;
               return (
-                <div key={s.lab} style={Object.assign({}, cardStyle, { padding: 12 })}>
-                  <div style={{ fontSize: 18 }}>{s.icon}</div>
-                  <div style={{ fontSize: 18, fontWeight: 800 }}>{s.val}</div>
-                  <div style={{ fontSize: 10, opacity: 0.4 }}>{s.lab}</div>
+                <div key={z.id} style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "8px 0",
+                  borderBottom: i < ZONES.length - 1 ? "1px solid rgba(0,62,73,0.06)" : "none",
+                  opacity: isPending ? 0.25 : 1,
+                  transition: "opacity 0.3s ease",
+                }}>
+                  <div style={{ fontSize: 16 }}>
+                    {isPending ? "⏳" : entry && entry.good ? "✅" : "⚠️"}
+                  </div>
+                  <div style={{ fontSize: 13, color: entry && !entry.good ? "#c0392b" : C.deepTeal }}>
+                    {isPending ? z.name + "…" : entry ? entry.text : z.name}
+                  </div>
                 </div>
               );
             })}
           </div>
 
-          <div style={Object.assign({}, cardStyle, {
-            padding: 14, marginBottom: 24, fontSize: 13, lineHeight: 1.6,
-            background: C.cream, border: "1px solid " + C.orange + "33",
-          })}>
-            <div style={{ fontFamily: headFont, fontSize: 16, color: C.deepTeal, marginBottom: 4 }}>Archway Pet Food</div>
-            Hypoallergenic dog food & treats from invasive Asian carp.
-            <strong style={{ color: C.orange }}> Unshakably sustainable.</strong>
-          </div>
-
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
-            <button onClick={function() {
-              function onCopied() { setCopied(true); setTimeout(function() { setCopied(false); }, 2000); }
-              if (navigator.clipboard) {
-                navigator.clipboard.writeText(shareText).then(onCopied);
-              } else {
-                var ta = document.createElement("textarea");
-                ta.value = shareText;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand("copy");
-                document.body.removeChild(ta);
-                onCopied();
-              }
-            }} style={btnPrimary}>
-              {copied ? "✓ Copied!" : "🐾 Share Score"}
-            </button>
-            <button onClick={resetAll} style={btnSecondary}>Play Again</button>
+          <div style={{ textAlign: "center", marginTop: 20 }}>
+            <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
+              {ZONES.map(function (_, i) {
+                return (
+                  <div key={i} style={{
+                    width: 8, height: 8, borderRadius: "50%",
+                    background: i < executingStep ? C.deepTeal : "rgba(0,62,73,0.15)",
+                    transition: "background 0.3s ease",
+                  }} />
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // ===== RESULTS =====
+  // ===== RESULTS SCREEN =====
   if (phase === "results") {
     return (
-      <div style={{
-        minHeight: "100vh", fontFamily: bodyFont, color: C.deepTeal, padding: 16, position: "relative",
-      }}>
+      <div style={{ minHeight: "100vh", fontFamily: bodyFont, color: C.deepTeal, padding: 16, position: "relative" }}>
         {css}
         <WaterBg />
         <div style={{ position: "relative", zIndex: 1 }}>
@@ -538,8 +793,10 @@ export default function Game() {
             Round {round} Results
           </h2>
 
+          {currentEvent && <EventBanner event={currentEvent} />}
+
           <div style={Object.assign({}, cardStyle, { padding: 14, marginBottom: 14 })}>
-            {log.map(function(entry, i) {
+            {log.map(function (entry, i) {
               return (
                 <div key={i} style={{
                   fontSize: 13, padding: "5px 0", color: entry.good ? C.deepTeal : "#c0392b",
@@ -580,8 +837,157 @@ export default function Game() {
     );
   }
 
-  // ===== PLANNING =====
-  var pickedZone = zones.find(function(z) { return z.id === picked; });
+  // ===== GAME OVER SCREEN =====
+  if (phase === "gameover") {
+    var sc = calcScore(avgHealth, avgCarp, pupsFed, harvested);
+    var g = getGrade(sc);
+    var ending = getNamedEnding(zones);
+    var shareText = "🐟 I scored " + sc + " pts in Carp Cleanup by @ArchwayPetFood!\n🎣 " + harvested.toLocaleString() + " lbs removed\n🐕 " + pupsFed.toLocaleString() + " pups fed healthier\n🌿 " + avgHealth + "% recovery\nPlay now! 🐾";
+
+    return (
+      <div style={{
+        minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center",
+        justifyContent: "center", fontFamily: bodyFont, color: C.deepTeal,
+        padding: 24, textAlign: "center", position: "relative",
+      }}>
+        {css}
+        <WaterBg />
+        <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 400 }}>
+          <div style={{ fontSize: 10, letterSpacing: 4, opacity: 0.4, marginBottom: 8 }}>MISSION COMPLETE</div>
+
+          {/* Grade badge */}
+          <div style={{
+            width: 90, height: 90, borderRadius: "50%", display: "flex", alignItems: "center",
+            justifyContent: "center", border: "3px solid " + g.c, fontSize: 44, fontWeight: 900,
+            boxShadow: "0 0 24px " + g.c + "55", margin: "0 auto 8px", background: "white",
+          }}>{g.l}</div>
+
+          {/* Named ending */}
+          <div style={{ fontFamily: headFont, fontSize: 18, color: C.deepTeal }}>{ending.title}</div>
+          <div style={{ fontSize: 12, opacity: 0.5, margin: "4px 0 8px" }}>{ending.desc}</div>
+          <div style={{ fontFamily: headFont, fontSize: 36, color: C.orange, marginBottom: 16 }}>{sc.toLocaleString()} pts</div>
+
+          <div style={Object.assign({}, cardStyle, { padding: "8px 12px", marginBottom: 14 })}>
+            <PupPack count={pupsFed} />
+            <div style={{ fontSize: 12, opacity: 0.5, paddingBottom: 6, color: C.deepTeal }}>
+              {pupsFed.toLocaleString()} pups eating healthier!
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+            {[
+              { icon: "🎣", val: harvested.toLocaleString() + " lbs", lab: "Carp Removed" },
+              { icon: "🐕", val: pupsFed.toLocaleString(), lab: "Pups Fed" },
+              { icon: "🌿", val: avgHealth + "%", lab: "Eco Recovery" },
+              { icon: "📉", val: avgCarp + "%", lab: "Carp Left" },
+            ].map(function (s) {
+              return (
+                <div key={s.lab} style={Object.assign({}, cardStyle, { padding: 12 })}>
+                  <div style={{ fontSize: 18 }}>{s.icon}</div>
+                  <div style={{ fontSize: 18, fontWeight: 800 }}>{s.val}</div>
+                  <div style={{ fontSize: 10, opacity: 0.4 }}>{s.lab}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Submit to leaderboard */}
+          {!scoreSubmitted && (
+            <div style={Object.assign({}, cardStyle, { padding: 14, marginBottom: 14 })}>
+              <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 8, color: C.deepTeal }}>Submit to Leaderboard</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  type="text"
+                  placeholder="Your name"
+                  value={playerName}
+                  maxLength={20}
+                  onChange={function (e) { setPlayerName(e.target.value); }}
+                  style={{
+                    flex: 1, border: "1px solid rgba(0,62,73,0.2)", borderRadius: 8,
+                    padding: "8px 12px", fontSize: 13, fontFamily: bodyFont, color: C.deepTeal,
+                    background: C.milk, outline: "none",
+                  }}
+                />
+                <button
+                  onClick={function () { if (playerName.trim()) submitScore(playerName.trim(), sc); }}
+                  disabled={!playerName.trim()}
+                  style={Object.assign({}, btn, {
+                    background: playerName.trim() ? C.deepTeal : "rgba(0,62,73,0.15)",
+                    color: playerName.trim() ? C.cream : "rgba(0,62,73,0.3)",
+                    padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 700,
+                  })}
+                >Submit</button>
+              </div>
+            </div>
+          )}
+
+          {/* Leaderboard */}
+          {leaderboard.length > 0 && (
+            <div style={Object.assign({}, cardStyle, { padding: 14, marginBottom: 14, textAlign: "left" })}>
+              <div style={{ fontSize: 10, letterSpacing: 2, opacity: 0.4, marginBottom: 8, fontWeight: 700 }}>
+                TOP PLAYERS
+              </div>
+              {leaderboard.slice(0, 5).map(function (entry, i) {
+                return (
+                  <div key={i} style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    padding: "5px 0",
+                    borderBottom: i < Math.min(leaderboard.length, 5) - 1 ? "1px solid rgba(0,62,73,0.06)" : "none",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 11, opacity: 0.4, width: 16 }}>{i + 1}</span>
+                      <span style={{ fontSize: 13 }}>{entry.name}</span>
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.orange }}>{entry.score.toLocaleString()}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Archway brand card + CTA */}
+          <div style={Object.assign({}, cardStyle, {
+            padding: 14, marginBottom: 20, background: C.cream, border: "1px solid " + C.orange + "33",
+          })}>
+            <div style={{ fontFamily: headFont, fontSize: 16, color: C.deepTeal, marginBottom: 4 }}>
+              Archway Pet Food
+            </div>
+            <p style={{ fontSize: 13, lineHeight: 1.6, marginBottom: 12 }}>
+              Hypoallergenic dog food & treats made from invasive Asian carp.
+              <strong style={{ color: C.orange }}> Unshakably sustainable.</strong>
+            </p>
+            <a
+              href="https://archwaypetfood.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={Object.assign({}, btn, {
+                display: "inline-block",
+                background: C.orange, color: C.deepTeal,
+                padding: "10px 24px", borderRadius: 50, fontSize: 13, fontWeight: 700,
+                textDecoration: "none",
+              })}
+            >
+              Shop Archway →
+            </a>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+            <button
+              onClick={function () { shareScore(shareText); }}
+              style={btnPrimary}
+            >
+              🐾 Share Score
+            </button>
+            <button onClick={resetAll} style={btnSecondary}>Play Again</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== PLANNING SCREEN =====
+  var pickedZone = zones.find(function (z) { return z.id === picked; });
+  var activeCombo = picked && assigned[picked] ? getComboBonus(picked, assigned) : null;
 
   return (
     <div style={{
@@ -589,6 +995,7 @@ export default function Game() {
       display: "flex", flexDirection: "column", position: "relative",
     }}>
       {css}
+      {productUnlock && <ProductUnlockModal product={productUnlock} onClose={function () { setProductUnlock(null); }} />}
       <WaterBg />
 
       {/* Header */}
@@ -605,9 +1012,18 @@ export default function Game() {
             fontSize: 9, fontWeight: 700, letterSpacing: 1,
           }}>ARCHWAY</span>
         </div>
-        <div style={{ fontSize: 12 }}>
-          Rd <strong style={{ color: C.orange }}>{round}</strong>/{maxRounds}
-          &nbsp;&nbsp;💰 <strong style={{ color: C.deepTeal }}>${money.toLocaleString()}</strong>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12 }}>
+          {/* Running projected grade */}
+          <div style={{
+            background: projectedGrade.c + "33", border: "1px solid " + projectedGrade.c + "66",
+            borderRadius: 8, padding: "2px 8px", fontSize: 10, fontWeight: 700, color: C.deepTeal,
+          }}>
+            {projectedGrade.l} · {projectedScore.toLocaleString()}
+          </div>
+          <div>
+            Rd <strong style={{ color: C.orange }}>{round}</strong>/{maxRounds}
+            &nbsp;&nbsp;💰 <strong style={{ color: C.deepTeal }}>${money.toLocaleString()}</strong>
+          </div>
         </div>
       </div>
 
@@ -631,14 +1047,21 @@ export default function Game() {
       {/* Content */}
       <div style={{ flex: 1, overflow: "auto", padding: 16, position: "relative", zIndex: 1 }}>
 
+        {/* Event banner */}
+        <EventBanner event={currentEvent} />
+
         <div style={{ fontSize: 10, letterSpacing: 1.5, opacity: 0.4, marginBottom: 6, fontWeight: 700 }}>SELECT A ZONE</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-          {zones.map(function(z) {
+          {zones.map(function (z, zIdx) {
             var isSel = picked === z.id;
             var hasMeth = assigned[z.id];
             var hc = z.health > 60 ? C.leaf : z.health > 30 ? C.orange : C.pink;
+            var zHistory = zoneHistory.map(function (snapshot) { return snapshot[zIdx]; });
+            var carpHistory = zHistory.map(function (s) { return s.carp; });
+            var healthHistory = zHistory.map(function (s) { return s.health; });
+
             return (
-              <button key={z.id} onClick={function() { pickZone(z.id); }} style={{
+              <button key={z.id} onClick={function () { pickZone(z.id); }} style={{
                 ...btn, display: "block", width: "100%", textAlign: "left", color: C.deepTeal,
                 background: "white", border: isSel ? "2px solid " + C.deepTeal : "1px solid rgba(0,62,73,0.1)",
                 borderRadius: 14, padding: 0, overflow: "hidden",
@@ -651,7 +1074,14 @@ export default function Game() {
                     <div style={{ fontSize: 13, fontWeight: isSel ? 700 : 500 }}>{z.name}</div>
                     <div style={{ fontSize: 10, opacity: 0.45 }}>Carp: {z.carp}% · Health: {z.health}%</div>
                   </div>
-                  {hasMeth && <span style={{ fontSize: 16 }}>{METHODS.find(function(m) { return m.id === hasMeth; }).icon}</span>}
+                  {/* Sparklines */}
+                  {carpHistory.length > 1 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
+                      <Sparkline data={carpHistory} color="#c0392b" />
+                      <Sparkline data={healthHistory} color={C.leaf} />
+                    </div>
+                  )}
+                  {hasMeth && <span style={{ fontSize: 16 }}>{METHODS.find(function (m) { return m.id === hasMeth; }).icon}</span>}
                 </div>
               </button>
             );
@@ -664,7 +1094,7 @@ export default function Game() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <h3 style={{ margin: 0, fontFamily: headFont, fontSize: 18 }}>{pickedZone.name}</h3>
               {assigned[picked] && (
-                <button onClick={function() { removeAssignment(picked); }} style={{
+                <button onClick={function () { removeAssignment(picked); }} style={{
                   ...btn, background: C.pink + "44", border: "1px solid " + C.pink,
                   color: "#c0392b", padding: "4px 12px", borderRadius: 8, fontSize: 11,
                 }}>Remove</button>
@@ -682,14 +1112,31 @@ export default function Game() {
                 <Bar value={pickedZone.health} color={C.leaf} />
               </div>
             </div>
+
+            {/* Active combo indicator */}
+            {activeCombo && (
+              <div style={{
+                background: C.grass + "33", border: "1px solid " + C.grass + "66",
+                borderRadius: 8, padding: "6px 10px", marginBottom: 10,
+                fontSize: 11, color: C.deepTeal, fontWeight: 600,
+                animation: "slideIn 0.2s ease",
+              }}>
+                ⚡ Combo: {activeCombo.label} (+{Math.round(activeCombo.bonus * 100)}%)
+              </div>
+            )}
+
             <div style={{ fontSize: 10, letterSpacing: 1.5, opacity: 0.4, marginBottom: 6, fontWeight: 700 }}>DEPLOY METHOD</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-              {METHODS.map(function(m) {
+              {METHODS.map(function (m) {
                 var isActive = assigned[picked] === m.id;
-                var refund = assigned[picked] ? METHODS.find(function(x) { return x.id === assigned[picked]; }).cost : 0;
+                var refund = assigned[picked] ? METHODS.find(function (x) { return x.id === assigned[picked]; }).cost : 0;
                 var canAfford = isActive || (money + refund >= m.cost);
+                // Check if this method would form a combo with any adjacent zone
+                var testAssigned = Object.assign({}, assigned, {});
+                testAssigned[picked] = m.id;
+                var potentialCombo = getComboBonus(picked, testAssigned);
                 return (
-                  <button key={m.id} onClick={function() { assignMethod(m.id); }} style={{
+                  <button key={m.id} onClick={function () { assignMethod(m.id); }} style={{
                     ...btn, color: C.deepTeal,
                     background: isActive ? C.cream : "white",
                     border: isActive ? "2px solid " + C.deepTeal : "1px solid rgba(0,62,73,0.1)",
@@ -697,9 +1144,19 @@ export default function Game() {
                     opacity: canAfford ? 1 : 0.35,
                     boxShadow: isActive ? "0 2px 8px rgba(0,62,73,0.1)" : "none",
                   }}>
-                    <div style={{ fontSize: 14 }}>{m.icon} <span style={{ fontSize: 12, fontWeight: 700 }}>{m.name}</span></div>
+                    <div style={{ fontSize: 14 }}>
+                      {m.icon} <span style={{ fontSize: 12, fontWeight: 700 }}>{m.name}</span>
+                      {potentialCombo && !isActive && (
+                        <span style={{ fontSize: 8, background: C.grass + "44", color: C.deepTeal, borderRadius: 4, padding: "1px 4px", marginLeft: 4, fontWeight: 700 }}>
+                          COMBO
+                        </span>
+                      )}
+                    </div>
                     <div style={{ fontSize: 10, fontWeight: 700, color: isActive ? C.deepTeal : C.orange, marginTop: 4 }}>
                       {isActive ? "✓ Deployed" : "$" + m.cost}
+                    </div>
+                    <div style={{ fontSize: 9, opacity: 0.4, marginTop: 2 }}>
+                      Power {m.power} · Eco {m.eco > 0 ? "+" : ""}{m.eco}
                     </div>
                   </button>
                 );
@@ -711,26 +1168,42 @@ export default function Game() {
         {/* Upgrades */}
         <div style={{ fontSize: 10, letterSpacing: 1.5, opacity: 0.4, marginBottom: 6, fontWeight: 700 }}>ARCHWAY INFRASTRUCTURE</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 16 }}>
-          {[
-            { name: "Mfg Partner", icon: "🤝", cost: 1200, desc: "+40% capacity", owned: hasPlant, set: setHasPlant },
-            { name: "Bio Lab", icon: "🔬", cost: 1000, desc: "+30% efficiency", owned: hasLab, set: setHasLab },
-            { name: "Vet Outreach", icon: "🩺", cost: 800, desc: "+$150/round", owned: hasVet, set: setHasVet },
-            { name: "Cold Chain", icon: "🚛", cost: 1800, desc: "+60% yield", owned: hasCold, set: setHasCold },
-            { name: "Zero Waste", icon: "♻️", cost: 1500, desc: "Skins & bladder", owned: hasZero, set: setHasZero },
-          ].map(function(u) {
+          {UPGRADES.map(function (u) {
+            var level = upgrades[u.id];
+            var isMaxed = level >= 2;
+            var tier = u.tiers[level] || null;
+            var canBuy = tier && money >= tier.cost;
             return (
-              <button key={u.name} onClick={function() { if (!u.owned) buyUpgrade(u.cost, u.set); }} style={{
+              <button key={u.id} onClick={function () { if (!isMaxed) buyUpgrade(u.id); }} style={{
                 ...btn, color: C.deepTeal,
-                background: u.owned ? C.leaf + "22" : "white",
-                border: u.owned ? "1px solid " + C.leaf + "55" : "1px solid rgba(0,62,73,0.1)",
+                background: level > 0 ? C.leaf + "22" : "white",
+                border: level > 0 ? "1px solid " + C.leaf + "55" : "1px solid rgba(0,62,73,0.1)",
                 borderRadius: 12, padding: 10, textAlign: "left",
-                opacity: (u.owned || money >= u.cost) ? 1 : 0.35,
+                opacity: (isMaxed || canBuy || level > 0) ? 1 : 0.35,
               }}>
-                <div style={{ fontSize: 16 }}>{u.icon}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div style={{ fontSize: 16 }}>{u.icon}</div>
+                  {level > 0 && (
+                    <div style={{ display: "flex", gap: 2 }}>
+                      {[1, 2].map(function (t) {
+                        return (
+                          <div key={t} style={{
+                            width: 6, height: 6, borderRadius: "50%",
+                            background: level >= t ? C.leaf : "rgba(0,62,73,0.1)",
+                          }} />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
                 <div style={{ fontSize: 10, fontWeight: 700, marginTop: 2 }}>{u.name}</div>
-                <div style={{ fontSize: 9, opacity: 0.45 }}>{u.desc}</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: u.owned ? C.leaf : C.orange, marginTop: 3 }}>
-                  {u.owned ? "✓ Active" : "$" + u.cost}
+                <div style={{ fontSize: 9, opacity: 0.45 }}>
+                  {isMaxed ? "Maxed" : tier ? tier.desc : ""}
+                </div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: isMaxed ? C.leaf : canBuy ? C.orange : "rgba(0,62,73,0.3)", marginTop: 3 }}>
+                  {isMaxed ? "✓ Max" : level > 0 ? "Upgrade $" + tier.cost : "✓ Active $" + (tier ? tier.cost : "?")}
+                  {level === 0 && !isMaxed && " (Tier 1)"}
+                  {level === 1 && !isMaxed && " (Tier 2)"}
                 </div>
               </button>
             );
@@ -742,7 +1215,9 @@ export default function Game() {
           width: "100%", opacity: deployCount > 0 ? 1 : 0.3,
           background: deployCount > 0 ? C.deepTeal : C.leaf,
         })}>
-          {deployCount > 0 ? "Execute Round " + round + " (" + deployCount + " zone" + (deployCount > 1 ? "s" : "") + ")" : "Deploy to at least 1 zone"}
+          {deployCount > 0
+            ? "Execute Round " + round + " (" + deployCount + " zone" + (deployCount > 1 ? "s" : "") + ")"
+            : "Deploy to at least 1 zone"}
         </button>
       </div>
 
