@@ -226,33 +226,31 @@ function Bar({ value, color }) {
 // ===== MAIN GAME =====
 
 export default function Game() {
-  var _s = useState("title"); var phase = _s[0]; var setPhase = _s[1];
-  var _r = useState(1); var round = _r[0]; var setRound = _r[1];
-  var _m = useState(1000); var money = _m[0]; var setMoney = _m[1];
-  var _z = useState(ZONES.map(function(z) { return Object.assign({}, z); })); var zones = _z[0]; var setZones = _z[1];
-  var _p = useState(null); var picked = _p[0]; var setPicked = _p[1];
-  var _a = useState({}); var assigned = _a[0]; var setAssigned = _a[1];
-  var _h = useState(0); var harvested = _h[0]; var setHarvested = _h[1];
-  var _pf = useState(0); var pupsFed = _pf[0]; var setPupsFed = _pf[1];
-  var _l = useState([]); var log = _l[0]; var setLog = _l[1];
-  var _fi = useState(0); var factIdx = _fi[0]; var setFactIdx = _fi[1];
-  var _hp = useState(false); var hasPlant = _hp[0]; var setHasPlant = _hp[1];
-  var _hl = useState(false); var hasLab = _hl[0]; var setHasLab = _hl[1];
-  var _hv = useState(false); var hasVet = _hv[0]; var setHasVet = _hv[1];
-  var _hc = useState(false); var hasCold = _hc[0]; var setHasCold = _hc[1];
-  var _hz = useState(false); var hasZero = _hz[0]; var setHasZero = _hz[1];
+  const [phase, setPhase] = useState("title");
+  const [round, setRound] = useState(1);
+  const [money, setMoney] = useState(1000);
+  const [zones, setZones] = useState(ZONES.map(function(z) { return Object.assign({}, z); }));
+  const [picked, setPicked] = useState(null);
+  const [assigned, setAssigned] = useState({});
+  const [harvested, setHarvested] = useState(0);
+  const [pupsFed, setPupsFed] = useState(0);
+  const [log, setLog] = useState([]);
+  const [factIdx, setFactIdx] = useState(0);
+  const [hasPlant, setHasPlant] = useState(false);
+  const [hasLab, setHasLab] = useState(false);
+  const [hasVet, setHasVet] = useState(false);
+  const [hasCold, setHasCold] = useState(false);
+  const [hasZero, setHasZero] = useState(false);
+  const [copied, setCopied] = useState(false);
   var maxRounds = 12;
 
   function pickZone(id) { setPicked(id === picked ? null : id); }
   function assignMethod(mid) {
     if (!picked) return;
     var m = METHODS.find(function(x) { return x.id === mid; });
-    if (money < m.cost) return;
-    if (assigned[picked]) {
-      var old = METHODS.find(function(x) { return x.id === assigned[picked]; });
-      setMoney(function(p) { return p + old.cost; });
-    }
-    setMoney(function(p) { return p - m.cost; });
+    var refund = assigned[picked] ? METHODS.find(function(x) { return x.id === assigned[picked]; }).cost : 0;
+    if (money + refund < m.cost) return;
+    setMoney(function(p) { return p + refund - m.cost; });
     setAssigned(function(p) { var n = Object.assign({}, p); n[picked] = mid; return n; });
   }
   function removeAssignment(zid) {
@@ -321,7 +319,7 @@ export default function Game() {
   };
 
   var css = (
-    <style>{"\n      @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;700&display=swap');\n      @keyframes pupWag { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }\n      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }\n      * { box-sizing: border-box; }\n    "}</style>
+    <style>{"\n      @keyframes pupWag { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }\n      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }\n      * { box-sizing: border-box; }\n    "}</style>
   );
 
   var headFont = "'DM Serif Display', Georgia, serif";
@@ -346,7 +344,7 @@ export default function Game() {
 
           <div style={{
             fontFamily: headFont, fontSize: 56, lineHeight: 1, color: C.deepTeal, marginBottom: 4,
-          }}>Carp Crisis</div>
+          }}>Carp Cleanup</div>
 
           <p style={{ fontSize: 16, color: C.deepTeal, opacity: 0.6, fontStyle: "italic", margin: "8px 0 20px" }}>
             Save Our Waterways. Feed Our Pups.
@@ -443,7 +441,7 @@ export default function Game() {
       { min: 0, l: "D", t: "Needs More Nets", c: C.pink },
     ];
     var g = grades.find(function(x) { return sc >= x.min; });
-    var shareText = "🐟 I scored " + sc + " pts in Carp Crisis by @ArchwayPetFood!\n🎣 " + harvested.toLocaleString() + " lbs removed\n🐕 " + pupsFed.toLocaleString() + " pups fed healthier\n🌿 " + avgHealth + "% recovery\nPlay now! 🐾";
+    var shareText = "🐟 I scored " + sc + " pts in Carp Cleanup by @ArchwayPetFood!\n🎣 " + harvested.toLocaleString() + " lbs removed\n🐕 " + pupsFed.toLocaleString() + " pups fed healthier\n🌿 " + avgHealth + "% recovery\nPlay now! 🐾";
 
     return (
       <div style={{
@@ -496,8 +494,21 @@ export default function Game() {
           </div>
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
-            <button onClick={function() { if (navigator.clipboard) navigator.clipboard.writeText(shareText); }} style={btnPrimary}>
-              🐾 Share Score
+            <button onClick={function() {
+              function onCopied() { setCopied(true); setTimeout(function() { setCopied(false); }, 2000); }
+              if (navigator.clipboard) {
+                navigator.clipboard.writeText(shareText).then(onCopied);
+              } else {
+                var ta = document.createElement("textarea");
+                ta.value = shareText;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                document.body.removeChild(ta);
+                onCopied();
+              }
+            }} style={btnPrimary}>
+              {copied ? "✓ Copied!" : "🐾 Share Score"}
             </button>
             <button onClick={resetAll} style={btnSecondary}>Play Again</button>
           </div>
@@ -519,7 +530,7 @@ export default function Game() {
             display: "flex", justifyContent: "space-between", alignItems: "center",
             marginBottom: 16, paddingBottom: 10, borderBottom: "1px solid rgba(0,62,73,0.1)",
           }}>
-            <span style={{ fontFamily: headFont, fontSize: 18, color: C.deepTeal }}>Carp Crisis</span>
+            <span style={{ fontFamily: headFont, fontSize: 18, color: C.deepTeal }}>Carp Cleanup</span>
             <span style={{ fontSize: 12, opacity: 0.5 }}>Round {round}/{maxRounds}</span>
           </div>
 
@@ -588,7 +599,7 @@ export default function Game() {
         backdropFilter: "blur(10px)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontFamily: headFont, fontSize: 18, color: C.deepTeal }}>Carp Crisis</span>
+          <span style={{ fontFamily: headFont, fontSize: 18, color: C.deepTeal }}>Carp Cleanup</span>
           <span style={{
             background: C.orange, color: C.deepTeal, padding: "2px 8px", borderRadius: 10,
             fontSize: 9, fontWeight: 700, letterSpacing: 1,
@@ -675,15 +686,15 @@ export default function Game() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
               {METHODS.map(function(m) {
                 var isActive = assigned[picked] === m.id;
-                var canBuy = money >= m.cost || isActive;
-                var otherAssigned = assigned[picked] && !isActive;
+                var refund = assigned[picked] ? METHODS.find(function(x) { return x.id === assigned[picked]; }).cost : 0;
+                var canAfford = isActive || (money + refund >= m.cost);
                 return (
                   <button key={m.id} onClick={function() { assignMethod(m.id); }} style={{
                     ...btn, color: C.deepTeal,
                     background: isActive ? C.cream : "white",
                     border: isActive ? "2px solid " + C.deepTeal : "1px solid rgba(0,62,73,0.1)",
                     borderRadius: 12, padding: "10px 8px", textAlign: "left",
-                    opacity: (canBuy && !otherAssigned) ? 1 : 0.35,
+                    opacity: canAfford ? 1 : 0.35,
                     boxShadow: isActive ? "0 2px 8px rgba(0,62,73,0.1)" : "none",
                   }}>
                     <div style={{ fontSize: 14 }}>{m.icon} <span style={{ fontSize: 12, fontWeight: 700 }}>{m.name}</span></div>
