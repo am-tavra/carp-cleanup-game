@@ -15,24 +15,49 @@ function ArchDog({ x, y, scale, color, flip, happy, wag }) {
   var c = color || C.deepTeal;
   return (
     <g transform={"translate(" + x + "," + y + ") scale(" + (s * f) + "," + s + ")"}>
-      <ellipse cx="0" cy="12" rx="12" ry="8" fill="none" stroke={c} strokeWidth="1.8" />
-      <line x1="-6" y1="18" x2="-8" y2="26" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
-      <line x1="-2" y1="18" x2="-3" y2="26" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
-      <line x1="6" y1="18" x2="7" y2="26" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
-      <line x1="10" y1="17" x2="12" y2="26" stroke={c} strokeWidth="1.8" strokeLinecap="round" />
-      <circle cx="14" cy="2" r="6" fill="none" stroke={c} strokeWidth="1.8" />
-      <path d={"M10 -2 Q7 -6 9 -1"} stroke={c} strokeWidth="1.5" fill="none" strokeLinecap="round" />
-      <circle cx="16" cy="1" r="1.2" fill={c} />
-      <circle cx="16.3" cy="0.7" r="0.35" fill="white" />
-      <ellipse cx="19" cy="3" rx="1.5" ry="1" fill={c} />
-      {happy && <path d="M17 5 Q18 7 19 5" stroke={c} strokeWidth="0.8" fill="none" />}
-      {happy && <ellipse cx="18" cy="7" rx="1" ry="1.5" fill={C.pink} stroke={c} strokeWidth="0.5" />}
-      <path d={"M-12 8 Q-18 2 -16 -2"} stroke={c} strokeWidth="1.8" fill="none" strokeLinecap="round">
+      {/* Body — organic rounded shape instead of plain ellipse */}
+      <path d="M -12 5 Q -14 13 -10 19 Q -5 23 0 23 Q 5 23 10 19 Q 14 13 12 5 Q 11 -1 5 -3 Q 0 -5 -5 -3 Q -11 -1 -12 5 Z"
+        fill="none" stroke={c} strokeWidth="1.8" strokeLinejoin="round" />
+      {/* Back left leg + paw */}
+      <path d="M -8 21 L -9 28" stroke={c} strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M -9 28 Q -12 30 -10 31 Q -7 31 -6 29" stroke={c} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+      {/* Back right leg + paw */}
+      <path d="M -2 22 L -2 29" stroke={c} strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M -2 29 Q -5 31 -3 32 Q 0 32 1 30" stroke={c} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+      {/* Front left leg + paw */}
+      <path d="M 5 21 L 6 28" stroke={c} strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M 6 28 Q 3 30 5 31 Q 8 31 9 29" stroke={c} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+      {/* Front right leg + paw */}
+      <path d="M 10 18 L 12 26" stroke={c} strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M 12 26 Q 9 28 11 29 Q 14 29 15 27" stroke={c} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+      {/* Neck */}
+      <path d="M 9 2 Q 13 -2 17 -3" stroke={c} strokeWidth="2" fill="none" strokeLinecap="round" />
+      {/* Head */}
+      <circle cx="21" cy="-5" r="7.5" fill="none" stroke={c} strokeWidth="1.8" />
+      {/* Snout / muzzle bump */}
+      <path d="M 22 -1 Q 28 -1 29 1 Q 29 3 26 3 Q 22 3 22 1 Z"
+        fill="none" stroke={c} strokeWidth="1.3" strokeLinejoin="round" />
+      {/* Nose */}
+      <ellipse cx="28" cy="1" rx="1.5" ry="1" fill={c} />
+      {/* Eye */}
+      <circle cx="20" cy="-7" r="1.8" fill={c} />
+      <circle cx="20.5" cy="-7.5" r="0.55" fill="white" />
+      {/* Eyebrow */}
+      <path d="M 18 -9.5 Q 20.5 -11 23 -9.5" stroke={c} strokeWidth="0.9" fill="none" strokeLinecap="round" opacity="0.45" />
+      {/* Floppy ear — filled teardrop shape */}
+      <path d="M 15 -10 Q 10 -17 12 -5 Q 14 -11 15 -10 Z"
+        fill={c} opacity="0.3" stroke={c} strokeWidth="1.3" strokeLinejoin="round" />
+      {/* Mouth */}
+      {happy && <path d="M 23 3 Q 25.5 5 28 3" stroke={c} strokeWidth="0.9" fill="none" strokeLinecap="round" />}
+      {/* Tongue — rounded shape */}
+      {happy && <path d="M 24 4 Q 23 8 25.5 8 Q 28 8 27 4" fill={C.pink} stroke={c} strokeWidth="0.5" />}
+      {/* Tail — more dynamic 4-keyframe wag */}
+      <path d="M -12 9 Q -20 3 -19 -3 Q -18 -7 -13 -5" stroke={c} strokeWidth="1.8" fill="none" strokeLinecap="round">
         {wag && (
           <animate
             attributeName="d"
-            values="M-12 8 Q-18 2 -16 -2;M-12 8 Q-19 4 -17 0;M-12 8 Q-18 2 -16 -2"
-            dur="0.6s"
+            values="M -12 9 Q -20 3 -19 -3 Q -18 -7 -13 -5;M -12 9 Q -22 5 -20 -1 Q -19 -5 -14 -3;M -12 9 Q -18 1 -16 -5 Q -15 -9 -10 -7;M -12 9 Q -22 5 -20 -1 Q -19 -5 -14 -3;M -12 9 Q -20 3 -19 -3 Q -18 -7 -13 -5"
+            dur="0.75s"
             repeatCount="indefinite"
           />
         )}
@@ -64,6 +89,71 @@ function Bird({ x, y }) {
   );
 }
 
+// Proper fish silhouette: body + forked tail + fins + eye, swims via animateTransform.
+// Origin is at the tail root (x=0). Nose is at x = l*0.9 (faces right by default).
+// flip=true mirrors around x=0 so the fish faces left (for right→left swimmers).
+function CarpFish({ y, length, color, opacity, swimDur, fromX, toX, tailDur, flip }) {
+  var l = length || 12;
+  var c = color || C.deepTeal;
+  var op = opacity !== undefined ? opacity : 0.25;
+  var fy = y !== undefined ? y : 0;
+  var from = (fromX !== undefined ? fromX : -(l + 5)) + " " + fy;
+  var to = (toX !== undefined ? toX : 220) + " " + fy;
+
+  // Body: tapers from wide middle to pointed nose (right) and tail root (left)
+  var body = "M " + l*0.9 + " 0"
+    + " Q " + l*0.6 + " " + -(l*0.23) + " 0 0"
+    + " Q " + l*0.6 + " " + l*0.23 + " " + l*0.9 + " 0 Z";
+
+  // Forked tail — three keyframes for the wag
+  function tailPath(topAngle, btmAngle) {
+    return "M 0 0"
+      + " L " + -(l*topAngle) + " " + -(l*0.28)
+      + " Q " + -(l*0.08) + " 0 0 0"
+      + " Q " + -(l*0.08) + " 0 " + -(l*btmAngle) + " " + l*0.28 + " Z";
+  }
+  var tail0 = tailPath(0.20, 0.20);
+  var tail1 = tailPath(0.15, 0.25);
+  var tail2 = tailPath(0.25, 0.15);
+
+  // Dorsal fin (top)
+  var dorsal = "M " + l*0.28 + " " + -(l*0.2)
+    + " Q " + l*0.44 + " " + -(l*0.38) + " " + l*0.62 + " " + -(l*0.2);
+
+  // Pectoral fin (side)
+  var pectoral = "M " + l*0.44 + " " + l*0.1
+    + " Q " + l*0.47 + " " + l*0.27 + " " + l*0.62 + " " + l*0.17 + " Z";
+
+  return (
+    <g opacity={op}>
+      <animateTransform attributeName="transform" type="translate"
+        from={from} to={to} dur={swimDur || "9s"} repeatCount="indefinite" />
+      <g transform={flip ? "scale(-1,1)" : undefined}>
+        {/* Body */}
+        <path d={body} fill={c} />
+        {/* Scale glints */}
+        <path d={"M " + l*0.35 + " " + -(l*0.07) + " Q " + l*0.43 + " 0 " + l*0.35 + " " + l*0.07}
+          stroke="white" strokeWidth={Math.max(0.4, l*0.024)} fill="none" opacity="0.22" />
+        <path d={"M " + l*0.52 + " " + -(l*0.1) + " Q " + l*0.6 + " 0 " + l*0.52 + " " + l*0.1}
+          stroke="white" strokeWidth={Math.max(0.4, l*0.024)} fill="none" opacity="0.22" />
+        {/* Dorsal fin */}
+        <path d={dorsal} stroke={c} strokeWidth={Math.max(0.7, l*0.062)} fill="none" strokeLinecap="round" />
+        {/* Pectoral fin */}
+        <path d={pectoral} fill={c} opacity="0.55" />
+        {/* Animated forked tail */}
+        <path d={tail0} fill={c}>
+          <animate attributeName="d" values={[tail0, tail1, tail0, tail2, tail0].join(";")}
+            dur={tailDur || "0.45s"} repeatCount="indefinite" />
+        </path>
+        {/* Eye with highlight */}
+        <circle cx={l*0.77} cy={-(l*0.04)} r={l*0.07} fill="white" />
+        <circle cx={l*0.79} cy={-(l*0.04)} r={l*0.04} fill={c} />
+        <circle cx={l*0.81} cy={-(l*0.06)} r={l*0.018} fill="white" />
+      </g>
+    </g>
+  );
+}
+
 function WaterBg() {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 0, overflow: "hidden", pointerEvents: "none" }}>
@@ -77,12 +167,9 @@ function WaterBg() {
         </path>
       </svg>
       <svg style={{ position: "absolute", top: "55%", left: 0, width: "100%", height: "30%" }} viewBox="0 0 400 200">
-        <ellipse cy="60" rx="14" ry="5" fill={C.leaf} opacity="0.1">
-          <animate attributeName="cx" from="-20" to="420" dur="14s" repeatCount="indefinite" />
-        </ellipse>
-        <ellipse cy="120" rx="10" ry="4" fill={C.leaf} opacity="0.08">
-          <animate attributeName="cx" from="420" to="-20" dur="18s" repeatCount="indefinite" />
-        </ellipse>
+        <CarpFish y={60} length={28} color={C.leaf} opacity={0.11} fromX={-35} toX={435} swimDur="14s" tailDur="0.5s" />
+        <CarpFish y={120} length={22} color={C.leaf} opacity={0.08} fromX={430} toX={-30} swimDur="18s" tailDur="0.55s" flip={true} />
+        <CarpFish y={90} length={16} color={C.deepTeal} opacity={0.06} fromX={-25} toX={425} swimDur="22s" tailDur="0.4s" />
       </svg>
     </div>
   );
@@ -124,19 +211,17 @@ function ZoneArt({ health, carp }) {
       </ellipse>
       {Array.from({ length: fishCount }).map(function (_, i) {
         var fy = 24 + (i % 3) * 6;
-        var dur = 4 + i * 1.3;
+        var dur = (4 + i * 1.3) + "s";
         return (
-          <ellipse key={"c" + i} cy={fy} rx="5" ry="2" fill={C.deepTeal} opacity="0.2">
-            <animate attributeName="cx" from={-8 - i * 15} to="208" dur={dur + "s"} repeatCount="indefinite" />
-          </ellipse>
+          <CarpFish key={"c" + i} y={fy} length={10} color={C.deepTeal} opacity={0.22}
+            fromX={-15 - i * 12} toX={210} swimDur={dur} tailDur="0.38s" />
         );
       })}
       {Array.from({ length: nativeCount }).map(function (_, i) {
         var fy = 26 + i * 5;
         return (
-          <ellipse key={"n" + i} cy={fy} rx="3" ry="1.5" fill={C.lake} opacity="0.4">
-            <animate attributeName="cx" from="208" to="-8" dur={7 + i * 2 + "s"} repeatCount="indefinite" />
-          </ellipse>
+          <CarpFish key={"n" + i} y={fy} length={7} color={C.lake} opacity={0.45}
+            fromX={215} toX={-12} swimDur={(7 + i * 2) + "s"} tailDur="0.35s" flip={true} />
         );
       })}
     </svg>
