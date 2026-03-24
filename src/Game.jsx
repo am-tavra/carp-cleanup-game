@@ -9,85 +9,96 @@ import {
 
 // ===== SVG COMPONENTS =====
 
-// walk=true animates legs in diagonal pairs (back-left+front-right vs back-right+front-left)
+// Solid-filled cartoon dog. Body center is at local (0,0); legs bottom at y≈+20; ear top at y≈-22.
+// Place with y=20 on the home screen (scale 0.9) so the feet sit at ~y=38 (just above the land/water line).
+// Legs animate via rotation (animateTransform) on nested groups, pivoting at the hip joint (0,0).
 function ArchDog({ x, y, scale, color, flip, happy, wag, walk }) {
   var s = scale || 1;
   var f = flip ? -1 : 1;
   var c = color || C.deepTeal;
-  var wd = "0.5s"; // walk cycle duration
-  var wp = "0.25s"; // opposite-phase offset
+  var wd = "0.48s";
+  var wp = "0.24s";
 
   return (
     <g transform={"translate(" + x + "," + y + ") scale(" + (s * f) + "," + s + ")"}>
-      {/* Body — solid fill so it reads as a real animal, not a wireframe */}
-      <path d="M -12 5 Q -14 13 -10 19 Q -5 23 0 23 Q 5 23 10 19 Q 14 13 12 5 Q 11 -1 5 -3 Q 0 -5 -5 -3 Q -11 -1 -12 5 Z"
-        fill={c} fillOpacity="0.14" stroke={c} strokeWidth="1.8" strokeLinejoin="round" />
-
-      {/* Back left leg + paw — pair A (moves with front right) */}
-      <path d="M -8 21 L -10 28" stroke={c} strokeWidth="1.7" strokeLinecap="round">
-        {walk && <animate attributeName="d" values="M -8 21 L -10 28;M -8 21 L -6 28;M -8 21 L -10 28" dur={wd} repeatCount="indefinite" />}
-      </path>
-      <path d="M -10 28 Q -13 30 -11 31 Q -8 31 -7 29" stroke={c} strokeWidth="1.2" fill="none" strokeLinecap="round">
-        {walk && <animate attributeName="d" values="M -10 28 Q -13 30 -11 31 Q -8 31 -7 29;M -6 28 Q -7 30 -5 31 Q -2 31 -2 29;M -10 28 Q -13 30 -11 31 Q -8 31 -7 29" dur={wd} repeatCount="indefinite" />}
-      </path>
-
-      {/* Back right leg + paw — pair B (opposite phase) */}
-      <path d="M -2 22 L -3 29" stroke={c} strokeWidth="1.7" strokeLinecap="round">
-        {walk && <animate attributeName="d" values="M -2 22 L -3 29;M -2 22 L -5 29;M -2 22 L -3 29" dur={wd} begin={wp} repeatCount="indefinite" />}
-      </path>
-      <path d="M -3 29 Q -6 31 -4 32 Q -1 32 0 30" stroke={c} strokeWidth="1.2" fill="none" strokeLinecap="round">
-        {walk && <animate attributeName="d" values="M -3 29 Q -6 31 -4 32 Q -1 32 0 30;M -5 29 Q -8 31 -6 32 Q -3 32 -3 30;M -3 29 Q -6 31 -4 32 Q -1 32 0 30" dur={wd} begin={wp} repeatCount="indefinite" />}
-      </path>
-
-      {/* Front left leg + paw — pair B */}
-      <path d="M 5 21 L 4 28" stroke={c} strokeWidth="1.7" strokeLinecap="round">
-        {walk && <animate attributeName="d" values="M 5 21 L 4 28;M 5 21 L 7 28;M 5 21 L 4 28" dur={wd} begin={wp} repeatCount="indefinite" />}
-      </path>
-      <path d="M 4 28 Q 1 30 3 31 Q 6 31 7 29" stroke={c} strokeWidth="1.2" fill="none" strokeLinecap="round">
-        {walk && <animate attributeName="d" values="M 4 28 Q 1 30 3 31 Q 6 31 7 29;M 7 28 Q 5 30 7 31 Q 10 31 10 29;M 4 28 Q 1 30 3 31 Q 6 31 7 29" dur={wd} begin={wp} repeatCount="indefinite" />}
-      </path>
-
-      {/* Front right leg + paw — pair A */}
-      <path d="M 10 18 L 12 26" stroke={c} strokeWidth="1.7" strokeLinecap="round">
-        {walk && <animate attributeName="d" values="M 10 18 L 12 26;M 10 18 L 9 26;M 10 18 L 12 26" dur={wd} repeatCount="indefinite" />}
-      </path>
-      <path d="M 12 26 Q 9 28 11 29 Q 14 29 15 27" stroke={c} strokeWidth="1.2" fill="none" strokeLinecap="round">
-        {walk && <animate attributeName="d" values="M 12 26 Q 9 28 11 29 Q 14 29 15 27;M 9 26 Q 6 28 8 29 Q 11 29 12 27;M 12 26 Q 9 28 11 29 Q 14 29 15 27" dur={wd} repeatCount="indefinite" />}
-      </path>
-
-      {/* Neck */}
-      <path d="M 9 2 Q 13 -2 17 -3" stroke={c} strokeWidth="2" fill="none" strokeLinecap="round" />
-      {/* Collar — orange band for brand colour pop */}
-      <path d="M 8 3 Q 13 -1 18 -2" stroke={C.orange} strokeWidth="2.8" fill="none" strokeLinecap="round" opacity="0.75" />
-
-      {/* Head — lightly filled */}
-      <circle cx="21" cy="-5" r="7.5" fill={c} fillOpacity="0.1" stroke={c} strokeWidth="1.8" />
-      {/* Snout */}
-      <path d="M 22 -1 Q 28 -1 29 1 Q 29 3 26 3 Q 22 3 22 1 Z"
-        fill={c} fillOpacity="0.12" stroke={c} strokeWidth="1.3" strokeLinejoin="round" />
-      {/* Nose */}
-      <ellipse cx="28" cy="1" rx="1.5" ry="1" fill={c} />
-      <ellipse cx="27.4" cy="0.5" rx="0.4" ry="0.3" fill="white" opacity="0.5" />
-      {/* Eye */}
-      <circle cx="20" cy="-7" r="1.8" fill={c} />
-      <circle cx="20.5" cy="-7.5" r="0.55" fill="white" />
-      {/* Eyebrow */}
-      <path d="M 18 -9.5 Q 20.5 -11 23 -9.5" stroke={c} strokeWidth="0.9" fill="none" strokeLinecap="round" opacity="0.5" />
-      {/* Floppy ear — more opaque filled teardrop */}
-      <path d="M 15 -10 Q 10 -17 12 -5 Q 14 -11 15 -10 Z"
-        fill={c} opacity="0.45" stroke={c} strokeWidth="1.3" strokeLinejoin="round" />
-      {/* Mouth */}
-      {happy && <path d="M 23 3 Q 25.5 5 28 3" stroke={c} strokeWidth="0.9" fill="none" strokeLinecap="round" />}
-      {/* Tongue */}
-      {happy && <path d="M 24 4 Q 23 8 25.5 8 Q 28 8 27 4" fill={C.pink} stroke={c} strokeWidth="0.5" />}
-      {/* Tail — 5-keyframe wag for wide, fluid sweep */}
-      <path d="M -12 9 Q -20 3 -19 -3 Q -18 -7 -13 -5" stroke={c} strokeWidth="1.8" fill="none" strokeLinecap="round">
+      {/* Tail — thick stroked curve, drawn first so body overlaps the root */}
+      <path d="M -12 2 Q -22 -2 -20 -10 Q -18 -15 -13 -13"
+        stroke={c} strokeWidth="4.5" fill="none" strokeLinecap="round">
         {wag && (
           <animate attributeName="d"
-            values="M -12 9 Q -20 3 -19 -3 Q -18 -7 -13 -5;M -12 9 Q -22 5 -20 -1 Q -19 -5 -14 -3;M -12 9 Q -18 1 -16 -5 Q -14 -9 -10 -7;M -12 9 Q -22 5 -20 -1 Q -19 -5 -14 -3;M -12 9 Q -20 3 -19 -3 Q -18 -7 -13 -5"
+            values="M -12 2 Q -22 -2 -20 -10 Q -18 -15 -13 -13;M -12 2 Q -24 0 -22 -8 Q -20 -13 -15 -11;M -12 2 Q -19 -4 -17 -12 Q -15 -17 -10 -15;M -12 2 Q -24 0 -22 -8 Q -20 -13 -15 -11;M -12 2 Q -22 -2 -20 -10 Q -18 -15 -13 -13"
             dur="0.75s" repeatCount="indefinite" />
         )}
       </path>
+
+      {/* Back left leg — pair A: swings forward first */}
+      <g transform="translate(-7,8)">
+        <g>
+          {walk && <animateTransform attributeName="transform" type="rotate"
+            values="-20 0 0;20 0 0;-20 0 0" dur={wd} repeatCount="indefinite" />}
+          <rect x="-2.5" y="0" width="5" height="12" rx="2.5" fill={c} />
+        </g>
+      </g>
+      {/* Back right leg — pair B: opposite phase */}
+      <g transform="translate(-1,8)">
+        <g>
+          {walk && <animateTransform attributeName="transform" type="rotate"
+            values="20 0 0;-20 0 0;20 0 0" dur={wd} begin={wp} repeatCount="indefinite" />}
+          <rect x="-2.5" y="0" width="5" height="12" rx="2.5" fill={c} />
+        </g>
+      </g>
+
+      {/* Body — solid fill, subtle belly highlight */}
+      <ellipse cx="0" cy="0" rx="12" ry="8" fill={c} />
+      <ellipse cx="0" cy="4" rx="8" ry="3.5" fill="white" fillOpacity="0.14" />
+
+      {/* Front left leg — pair B */}
+      <g transform="translate(6,8)">
+        <g>
+          {walk && <animateTransform attributeName="transform" type="rotate"
+            values="20 0 0;-20 0 0;20 0 0" dur={wd} begin={wp} repeatCount="indefinite" />}
+          <rect x="-2.5" y="0" width="5" height="12" rx="2.5" fill={c} />
+        </g>
+      </g>
+      {/* Front right leg — pair A */}
+      <g transform="translate(10,7)">
+        <g>
+          {walk && <animateTransform attributeName="transform" type="rotate"
+            values="-20 0 0;20 0 0;-20 0 0" dur={wd} repeatCount="indefinite" />}
+          <rect x="-2.5" y="0" width="5" height="12" rx="2.5" fill={c} />
+        </g>
+      </g>
+
+      {/* Neck — filled ellipse bridges body and head */}
+      <ellipse cx="11" cy="-5" rx="5" ry="6.5" fill={c} />
+      {/* Collar */}
+      <path d="M 7 -1 Q 11 -6 17 -5" stroke={C.orange} strokeWidth="3" fill="none" strokeLinecap="round" opacity="0.9" />
+
+      {/* Head */}
+      <circle cx="18" cy="-11" r="8" fill={c} />
+
+      {/* Floppy ear */}
+      <path d="M 11 -16 Q 6 -22 10 -10 Q 12 -13 11 -16 Z" fill={c} opacity="0.85" />
+
+      {/* Snout */}
+      <ellipse cx="24" cy="-8" rx="4.5" ry="3.5" fill={c} />
+      <ellipse cx="24" cy="-7" rx="3" ry="2" fill="white" fillOpacity="0.16" />
+
+      {/* Nose */}
+      <ellipse cx="27.5" cy="-9.5" rx="2" ry="1.4" fill="#001820" />
+      <circle cx="26.9" cy="-10" r="0.5" fill="white" opacity="0.7" />
+
+      {/* Eye — white sclera, dark iris, specular dot */}
+      <circle cx="16" cy="-13" r="2.6" fill="white" />
+      <circle cx="16.5" cy="-13" r="1.7" fill="#001820" />
+      <circle cx="17.1" cy="-13.5" r="0.55" fill="white" />
+
+      {/* Eyebrow */}
+      <path d="M 13 -16 Q 16 -18.5 19 -16" stroke={c} strokeWidth="1.1" fill="none" strokeLinecap="round" opacity="0.55" />
+
+      {/* Mouth + tongue */}
+      {happy && <path d="M 21 -6 Q 24 -3 27 -6" stroke="#001820" strokeWidth="1.1" fill="none" strokeLinecap="round" />}
+      {happy && <path d="M 22 -5 Q 21 0 24 0 Q 27 0 26 -5" fill={C.pink} stroke="#001820" strokeWidth="0.5" />}
     </g>
   );
 }
@@ -270,7 +281,7 @@ function PupPack({ count }) {
   return (
     <svg viewBox="0 0 220 46" style={{ width: "100%", maxWidth: 320, height: 46, display: "block", margin: "0 auto" }}>
       {Array.from({ length: n }).map(function (_, i) {
-        return <ArchDog key={i} x={14 + i * 21} y={10} scale={0.65} color={C.deepTeal}
+        return <ArchDog key={i} x={14 + i * 21} y={15} scale={0.65} color={C.deepTeal}
           flip={i % 3 === 0} happy={happy} wag={true} walk={true} />;
       })}
     </svg>
@@ -778,7 +789,7 @@ export default function Game() {
             </ellipse>
             <g>
               <animateTransform attributeName="transform" type="translate" values="0 0;0 -2;0 0;0 -1;0 0" dur="1.6s" repeatCount="indefinite" />
-              <ArchDog x={110} y={10} scale={0.9} color={C.deepTeal} happy={true} wag={true} walk={true} />
+              <ArchDog x={110} y={20} scale={0.9} color={C.deepTeal} happy={true} wag={true} walk={true} />
             </g>
           </svg>
 
